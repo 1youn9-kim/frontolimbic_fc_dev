@@ -10,3 +10,5 @@ The BCP dataset and the HCP-D dataset can be accessed by submitting data access 
 The PNC dataset is also available through a data access request (https://www.ncbi.nlm.nih.gov/projects/gap/cgi-bin/study.cgi?study_id=phs000607.v3.p2).
 
 HCP-YA and HCP-D is distributed in minimally pre-processed format, while BCP and PNC are distributed in raw format and must be pre-processed.
+
+When downloaded (or finished pre-processing), datasets have different data structures - scripts are tailored for each dataset for this reason.
