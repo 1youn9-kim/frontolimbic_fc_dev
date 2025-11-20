@@ -11,4 +11,4 @@ The PNC dataset is also available through a data access request (https://www.ncb
 
 HCP-YA and HCP-D is distributed in minimally pre-processed format, while BCP and PNC are distributed in raw format and must be pre-processed.
 
-When downloaded (or finished pre-processing), datasets have different data structures - scripts are tailored for each dataset for this reason.
+Scripts are tailored for each dataset - this is because when downloaded (or finished pre-processing), datasets have different data structures.
