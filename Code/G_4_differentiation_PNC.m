@@ -1,6 +1,4 @@
-
 clear; clc;
-
 
 Top = '/data/projects';
 input_dir = '/data/projects/punim2400/derivatives/PNC/corr_maps';
@@ -20,6 +18,7 @@ subs_master_table.src_subject_id = [];
 subs_master_table = renamevars(subs_master_table,'bids','src_subject_id');
 fd_table = readtable(fullfile(Top, 'derivatives/qc_metrics/mean_fd_PNC.csv'));
 icv_table = readtable(fullfile(Top, 'derivatives/qc_metrics/icv_values_PNC.csv'));
+
 master_table = innerjoin(subs_master_table, fd_table, 'Keys', 'src_subject_id');
 master_table = innerjoin(master_table, icv_table, 'Keys', 'src_subject_id');
 
@@ -45,9 +44,7 @@ loaded_subj_ids = subj_ids(~is_missing_from_load);
 loaded_delta_r = delta_r(~is_missing_from_load, :);
 
 [is_present, location_in_loaded_data] = ismember(master_table.src_subject_id, loaded_subj_ids);
-
 final_cov_table = master_table(is_present, :);
-
 reorder_indices = location_in_loaded_data(is_present);
 
 final_delta_r = loaded_delta_r(reorder_indices, :);
@@ -55,17 +52,32 @@ final_subj_ids = loaded_subj_ids(reorder_indices, :);
 
 save(fullfile(out_dir,'deltar_PNC.mat'),"final_delta_r");
 
+
 age = final_cov_table.age / 12;
-sex = categorical(final_cov_table.sex);
+
+
+sex_numeric = nan(height(final_cov_table), 1);
+for i = 1:height(final_cov_table)
+    val = string(final_cov_table.sex{i});
+    if strcmpi(val, 'M'), sex_numeric(i) = 1;
+    elseif strcmpi(val, 'F'), sex_numeric(i) = 2; 
+    end
+end
+
+if all(isnan(sex_numeric)) && isnumeric(final_cov_table.sex)
+     sex_numeric = final_cov_table.sex; 
+end
+
 mean_fd = final_cov_table.MeanFD;
 icv = final_cov_table.ICV;
-race = categorical(final_cov_table.race);
 
-X = [age, dummyvar(sex), dummyvar(race), mean_fd, icv];
+sex_dummies = dummyvar(sex_numeric); 
+X = [age, sex_dummies(:, 2), mean_fd, icv]; 
 X = normalize(X);
 
 beta_age = nan(n_vox,1);
 pvals_age = nan(n_vox,1);
+
 for v = 1:n_vox
     y = final_delta_r(:,v);
     mdl = fitlm(X, y);
@@ -83,17 +95,11 @@ template_scalar = template;
 template_scalar.cdata = nan(size(template.cdata,1), 1);
 template_scalar.diminfo{2} = cifti_diminfo_make_scalars(1);
 
-% Beta map
-beta_map = template_scalar;
-beta_map.cdata(voxel_idx) = beta_age;
+beta_map = template_scalar; beta_map.cdata(voxel_idx) = beta_age;
 cifti_write(beta_map, fullfile(out_dir, 'deltac_beta1_standardized_robust_PNC.dscalar.nii'));
 
-% Raw p
-pval_map = template_scalar;
-pval_map.cdata(voxel_idx) = pvals_age;
+pval_map = template_scalar; pval_map.cdata(voxel_idx) = pvals_age;
 cifti_write(pval_map, fullfile(out_dir, 'deltac_pvals_standardized_robust_PNC.dscalar.nii'));
 
-% FDR q
-qval_map = template_scalar;
-qval_map.cdata(voxel_idx) = qvals_age;
+qval_map = template_scalar; qval_map.cdata(voxel_idx) = qvals_age;
 cifti_write(qval_map, fullfile(out_dir, 'deltac_qvals_standardized_robust_PNC.dscalar.nii'));

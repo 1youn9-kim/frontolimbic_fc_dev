@@ -63,7 +63,6 @@ for i = 1:height(hcpd_final_covariates)
     end
 end
 hcpd_final_covariates.sex = sex_numeric;
-[~,~,hcpd_final_covariates.race] = unique(hcpd_final_covariates.race);
 
 %% BCP
 bcp_analysis_dir = fullfile(Top, 'derivatives', 'BCP');
@@ -114,7 +113,7 @@ fd_threshold = 0.5;
 drop_fd = aligned_table.MeanFD > fd_threshold | ismissing(aligned_table.MeanFD);
 drop_nan_fc = any(isnan(aligned_table.delta_r_raw), 2);
 
-essential_vars = {'interview_age', 'sex', 'race', 'site', 'MeanFD', 'ICV'};
+essential_vars = {'interview_age', 'sex', 'site', 'MeanFD', 'ICV'};
 
 temp_table = aligned_table(~drop_fd & ~drop_nan_fc, :);
 keep_mask = true(height(temp_table), 1);
@@ -122,12 +121,10 @@ keep_mask = true(height(temp_table), 1);
 for i = 1:height(temp_table)
     for k = 1:length(essential_vars)
         val = temp_table.(essential_vars{k})(i);
-
         if ismissing(val)
             keep_mask(i) = false;
             break; 
         end
-
     end
 end
 
@@ -159,10 +156,9 @@ for i = 1:height(bcp_final_covariates)
     end
 end
 bcp_final_covariates.sex = sex_numeric;
-[~,~,bcp_final_covariates.race] = unique(bcp_final_covariates.race);
 
 %% Harmonize
-cols_to_keep = {'src_subject_id', 'interview_age', 'sex', 'race', 'site', 'MeanFD', 'ICV'};
+cols_to_keep = {'src_subject_id', 'interview_age', 'sex', 'site', 'MeanFD', 'ICV'};
 master_covariates = [hcpd_final_covariates(:, cols_to_keep); ...
                      bcp_final_covariates(:, cols_to_keep)];
 master_covariates.interview_age = master_covariates.interview_age / 12;
@@ -176,11 +172,10 @@ dat_to_harmonize = master_delta_r';
 
 age_z = zscore(master_covariates.interview_age);
 sex_dummy = dummyvar(master_covariates.sex);
-race_dummy = dummyvar(master_covariates.race);
 meanfd_z = zscore(master_covariates.MeanFD);
 icv_z = zscore(master_covariates.ICV);
 
-mod = [age_z, sex_dummy(:, 1:end-1), race_dummy(:, 1:end-1), meanfd_z, icv_z];
+mod = [age_z, sex_dummy(:, 1:end-1), meanfd_z, icv_z];
 
 harmonized_dat = combat(dat_to_harmonize, batch, mod, 1);
 harmonized_delta_r_voxels = harmonized_dat';
