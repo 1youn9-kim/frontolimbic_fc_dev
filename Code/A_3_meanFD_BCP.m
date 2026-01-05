@@ -1,8 +1,8 @@
 clear; clc;
 
-Top = '/data/project';
+Top = '/data/projects/punim2400';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
-search_root = fullfile(bcp_project_dir, 'derivatives');
+search_root = fullfile(bcp_project_dir, 'derivatives', 'nibabies');
 output_dir = fullfile(Top, 'derivatives', 'BCP_FC_Analysis');
 
 dd = dir(fullfile(search_root, '**', '*_desc-confounds_timeseries.tsv'));

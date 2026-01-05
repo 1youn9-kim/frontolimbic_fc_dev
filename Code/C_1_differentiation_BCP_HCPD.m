@@ -5,22 +5,18 @@ addpath(genpath(fullfile(Top, 'tools')));
 
 %% HCPD
 amyg_idx = [2,10]; hipp_idx = [1,9];
-medial = [42,57,59,73,74,75,76,77,78,79,80,81,85,86,88,104,106,109,180,181,182,195,196,222,237,239,253,254,255,256,257,258,259,260,261,265,266,268,284,286,289,360,361,362,375,376];
-lateral = [26,27,28,60,84,87,93,94,96,97,98,100,101,102,103,105,107,112,113,186,187,206,207,208,240,264,267,273,274,277,278,280,281,282,283,285,287,292,293,366,367,82,83,89,90,91,92,95,99,108,110,114,262,263,269,270,271,272,275,276,279,288,290,294];
-ROI_cortex = [medial, lateral];
 cifti_label = cifti_read(fullfile(Top, 'Atlas/Q1-Q6_RelatedValidation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR_Tian_Subcortex_S1.dlabel.nii'));
 parc = cifti_label.cdata;
-subcort_all_idx = find(parc >= 1 & parc <= 16);
-amyg_hip_vox_idx = find(ismember(parc, [hipp_idx, amyg_idx]));
-
-amyg_cols = ismember(subcort_all_idx, amyg_idx); 
-hipp_cols = ismember(subcort_all_idx, hipp_idx);  
+subcort_all_idx = find(ismember(parc, [hipp_idx, amyg_idx]));
 n_vox_common = length(subcort_all_idx);
+subcort_vals = parc(subcort_all_idx);
+amyg_cols = ismember(subcort_vals, amyg_idx);
+hipp_cols = ismember(subcort_vals, hipp_idx);
 
 hcpd_input_dir = '/data/projects/punim2400/derivatives/HCPD/corr_maps';
-hcpd_subs_master_table = readtable(fullfile(Top, 'HCPDfMRI/ndar_subject01.txt'));
-hcpd_fd_table = readtable(fullfile(Top, 'derivatives/qc_metrics/mean_fd_allsubs.csv'));
-hcpd_icv_table = readtable(fullfile(Top, 'derivatives/qc_metrics/icv_values.csv'));
+hcpd_subs_master_table = readtable(fullfile(Top, 'HCPDfMRI', 'ndar_subject01.txt'));
+hcpd_fd_table = readtable(fullfile(Top, 'derivatives', 'qc_metrics', 'mean_fd_allsubs.csv'));
+hcpd_icv_table = readtable(fullfile(Top, 'derivatives', 'qc_metrics', 'icv_values.csv'));
 
 hcpd_master_table = innerjoin(hcpd_subs_master_table, hcpd_fd_table, 'Keys', 'src_subject_id');
 hcpd_master_table = innerjoin(hcpd_master_table, hcpd_icv_table, 'Keys', 'src_subject_id');
@@ -68,24 +64,38 @@ hcpd_final_covariates.sex = sex_numeric;
 bcp_analysis_dir = fullfile(Top, 'derivatives', 'BCP');
 bcp_input_dir = fullfile(bcp_analysis_dir, 'corr_maps');
 bcp_master_table = readtable(fullfile(Top, 'BABY/image03/BCP', 'ndar_subject01.txt'));
+bcp_master_table.src_subject_id = compose("sub-%06d", double(bcp_master_table.src_subject_id));
 
-icv_table = readtable(fullfile(bcp_analysis_dir, 'icv_values_BCP.csv'));
-mean_fd_table = readtable(fullfile(bcp_analysis_dir, 'mean_fd_run_BCP.csv')); 
+icv_table = readtable(fullfile(Top, 'derivatives', 'BCP_FC_Analysis', 'icv_values_BCP.csv'));
+mean_fd_table = readtable(fullfile(Top, 'derivatives', 'BCP_FC_Analysis', 'mean_fd_run_BCP.csv')); 
+
+icv_table.src_subject_id = string(icv_table.src_subject_id);
+icv_table.session = string(icv_table.session);
+
+mean_fd_table.src_subject_id = string(mean_fd_table.src_subject_id);
+mean_fd_table.session = string(mean_fd_table.session);
+mean_fd_table.run = string(mean_fd_table.run);
 
 bcp_files = dir(fullfile(bcp_input_dir, 'CorrVals_AmygHipOnly_*.mat'));
 n_scans_bcp = length(bcp_files);
 delta_r_bcp = nan(n_scans_bcp, n_vox_common);
-scan_info_subj = cell(n_scans_bcp, 1);
-scan_info_sess = cell(n_scans_bcp, 1);
+
+scan_info_subj = strings(n_scans_bcp, 1);
+scan_info_sess = strings(n_scans_bcp, 1);
 scan_info_run = strings(n_scans_bcp, 1); 
 scan_ages_mo = nan(n_scans_bcp, 1);
 
 for s = 1:n_scans_bcp
     D = load(fullfile(bcp_input_dir, bcp_files(s).name));
-    if ~isequal(D.subcortical_labels, subcort_all_idx), error('Voxel space mismatch!'); end
+    raw_id = D.subj_id;
+    if ischar(raw_id) || isstring(raw_id)
+        id_num = str2double(raw_id);
+    else
+        id_num = double(raw_id);
+    end
     
-    scan_info_subj{s} = ['sub-' D.subj_id]; 
-    scan_info_sess{s} = D.ses_name;
+    scan_info_subj(s) = "sub-" + sprintf('%06d', id_num); 
+    scan_info_sess(s) = string(D.ses_name);
     scan_info_run(s) = string(D.run);
     
     age_match = regexp(D.ses_name, '\d+', 'match');
@@ -148,10 +158,10 @@ bcp_final_covariates.delta_r_raw = [];
 
 sex_numeric = nan(height(bcp_final_covariates), 1);
 for i = 1:height(bcp_final_covariates)
-    val = bcp_final_covariates.sex{i};
-    if strcmpi(val, 'M')
+    val = bcp_final_covariates.sex(i); 
+    if strcmpi(val, "M")
         sex_numeric(i) = 1;
-    elseif strcmpi(val, 'F')
+    elseif strcmpi(val, "F")
         sex_numeric(i) = 2;
     end
 end
@@ -166,6 +176,7 @@ master_covariates.interview_age = master_covariates.interview_age / 12;
 [master_covariates, removed_rows_idx] = rmmissing(master_covariates);
 master_delta_r = [hcpd_final_delta_r; bcp_final_delta_r];
 master_delta_r(removed_rows_idx,:) = [];
+master_delta_r = master_delta_r(:,1:1743);
 
 dat_to_harmonize = master_delta_r';
 [~, ~, batch] = unique(master_covariates.site);

@@ -2,7 +2,7 @@ clear; clc;
 
 Top = '/data/project';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
-fmriprep_dir = fullfile(bcp_project_dir, 'derivatives');
+nibabies_dir = fullfile(bcp_project_dir, 'derivatives/nibabies');
 
 subject_list_file = fullfile(bcp_project_dir, 'final_sublist.txt');
 output_dir = fullfile(Top, 'derivatives', 'BCP', 'tstat_maps_final');
@@ -41,7 +41,7 @@ dropout_log = {'SubjectID_Session', 'Reason'};
 
 for s = 1:numel(subjects_to_process)
     subj_id = subjects_to_process{s};
-    subj_path = fullfile(fmriprep_dir, ['sub-' subj_id]);
+    subj_path = fullfile(nibabies_dir, ['sub-' subj_id]);
     if ~exist(subj_path, 'dir'), continue; end
     
     session_dirs = dir(fullfile(subj_path, 'ses-*'));

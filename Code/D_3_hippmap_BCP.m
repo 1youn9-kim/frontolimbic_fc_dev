@@ -3,7 +3,7 @@ clear; clc;
 
 Top = '/data/project';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
-fmriprep_dir = fullfile(bcp_project_dir, 'derivatives');
+nibabies_dir = fullfile(bcp_project_dir, 'derivatives/nibabies');
 subject_list_file = fullfile(bcp_project_dir, 'final_sublist.txt');
 addpath(genpath(fullfile(Top, 'tools')));
 session_fc_output_dir = fullfile(Top, 'derivatives', 'BCP', 'session_level_hipp_fc_maps_final');
@@ -44,7 +44,7 @@ if force_rerun_stage1 || ~session_files_exist
     for s = 1:numel(subjects_to_process)
         subj_id_short = subjects_to_process{s};
         subj_id = ['sub-' subj_id_short];
-        subj_path = fullfile(fmriprep_dir, subj_id);
+        subj_path = fullfile(nibabies_dir, subj_id);
         if ~exist(subj_path, 'dir'), continue; end
         
         session_dirs = dir(fullfile(subj_path, 'ses-*'));
@@ -148,9 +148,10 @@ end
 main_demographics_file = fullfile(Top, 'BABY/image03/BCP/ndar_subject01.txt');
 deltar_file = fullfile(Top, 'derivatives', 'MASTER_HARMONIZED_deltar_table_BCPHCPD.csv');
 deltar_gamlss_file = fullfile(Top, 'derivatives', 'gamlss_scores_BCPHCPD', 'deltar_gamlss_zscores_BCPHCPD.csv');
-bcp_icv_file = fullfile(Top, 'derivatives', 'BCP', 'icv_values_BCP.csv');
-bcp_mean_fd_file = fullfile(Top, 'derivatives', 'BCP', 'mean_fd_run_BCP.csv');
+bcp_icv_file = fullfile(Top, 'derivatives', 'BCP_FC_Analysis', 'icv_values_BCP.csv');
+bcp_mean_fd_file = fullfile(Top, 'derivatives', 'BCP_FC_Analysis', 'mean_fd_run_BCP.csv');
 main_demo_table = readtable(main_demographics_file);
+main_demo_table.src_subject_id = compose("sub-%06d", double(main_demo_table.src_subject_id));
 deltar_table = readtable(deltar_file);
 deltac_table = readtable(deltar_gamlss_file);
 bcp_icv_table = readtable(bcp_icv_file);

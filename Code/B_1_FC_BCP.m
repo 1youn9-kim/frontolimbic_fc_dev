@@ -1,14 +1,15 @@
 clear; clc;
 
 
-Top = '/data/project';
+Top = '/data/projects/punim2400';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
-fmriprep_dir = fullfile(bcp_project_dir, 'derivatives');
+nibabies_dir = fullfile(bcp_project_dir, 'derivatives', 'nibabies');
 
 subject_list_file = fullfile(bcp_project_dir, 'final_sublist.txt');
 output_dir = fullfile(Top, 'derivatives', 'BCP', 'corr_maps');
+if ~exist(output_dir, 'dir'), mkdir(output_dir); end
 
-addpath(genpath(fullfile(Top, 'tools')));
+addpath(genpath(fullfile(bcp_project_dir, 'tools')));
 subcortical_r = [1, 2]; subcortical_l = [9, 10];
 medial = [42,57,59,73,74,75,76,77,78,79,80,81,85,86,88,104,106,109,180,181,182,195,196,222,237,239,253,254,255,256,257,258,259,260,261,265,266,268,284,286,289,360,361,362,375,376];
 lateral = [26,27,28,60,84,87,93,94,96,97,98,100,101,102,103,105,107,112,113,186,187,206,207,208,240,264,267,273,274,277,278,280,281,282,283,285,287,292,293,366,367,82,83,89,90,91,92,95,99,108,110,114,262,263,269,270,271,272,275,276,279,288,290,294];
@@ -35,7 +36,7 @@ dropout_log = {'SubjectID_Session', 'Reason'};
 
 for s = 1:numel(subjects_to_process)
     subj_id = subjects_to_process{s};
-    subj_path = fullfile(fmriprep_dir, ['sub-' subj_id]);
+    subj_path = fullfile(nibabies_dir, ['sub-' subj_id]);
     if ~exist(subj_path, 'dir'), continue; end
     
     session_dirs = dir(fullfile(subj_path, 'ses-*'));
@@ -51,12 +52,14 @@ for s = 1:numel(subjects_to_process)
         end
         
         for r = 1:numel(bold_files)
-            run = string(r);
+            run_tok = regexp(bold_files(r).name, 'run-(\d+)', 'tokens', 'once');
+            if isempty(run_tok), run = '1'; else, run = string(str2double(run_tok{1})); end
+            
             ts_path = fullfile(bold_files(r).folder, bold_files(r).name);
             confounds_path = strrep(ts_path, '_space-fsLR_den-91k_bold.dtseries.nii', '_desc-confounds_timeseries.tsv');
             if ~isfile(ts_path) || ~isfile(confounds_path), continue; end
 
-            confounds_table_full = readtable(confounds_path, 'FileType', 'text', 'Delimiter', '\t');
+            confounds_table_full = readtable(confounds_path, 'FileType', 'text', 'Delimiter', '\t', 'TreatAsEmpty', {'n/a','NA'});
 
             fd_col = confounds_table_full.framewise_displacement;
             fd_col(isnan(fd_col)) = 0;
@@ -134,10 +137,10 @@ for s = 1:numel(subjects_to_process)
             out_struct.run = run;
             out_struct.voxel_indices = amyg_hip_vox_idx;
             out_struct.subcortical_labels = parc(amyg_hip_vox_idx);
-            out_struct.corr_left = corr_vals_left;
-            out_struct.corr_right = corr_vals_right;
+            out_struct.corr_left = double(corr_vals_left);
+            out_struct.corr_right = double(corr_vals_right);
             
-            output_filename = fullfile(output_dir, sprintf('CorrVals_AmygHipOnly_sub-%s_%s_%s.mat', subj_id, ses_name, run));
+            output_filename = fullfile(output_dir, sprintf('CorrVals_AmygHipOnly_sub-%s_%s_run-%s.mat', subj_id, ses_name, run));
             save(output_filename, '-struct', 'out_struct');
         end
     end
