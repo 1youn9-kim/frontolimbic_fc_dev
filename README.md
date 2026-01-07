@@ -1,4 +1,8 @@
 # frontolimbic_fc_dev
+
+<video src="[https://github.com/user/repo/assets/123456/abcdef-1234...](https://github.com/user-attachments/assets/9bb58601-f21e-46a5-b60b-0e3b37aaf128)" controls="controls" style="max-width: 730px;">
+</video>
+
 Frontolimbic Functional Connectivity Development from Birth to Emerging Adulthood
 
 Code is organized sequentially: Alphabets mark scripts for different parts of the study, and numbers mark the order in which the code need to be executed.
