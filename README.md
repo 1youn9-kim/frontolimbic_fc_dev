@@ -1,14 +1,10 @@
 # frontolimbic_fc_dev
 
 
-<br>
-<div align="center">
-  <video src="https://github.com/user-attachments/assets/9bb58601-f21e-46a5-b60b-0e3b37aaf128" width="400" />
-</div>
-<br>
+https://github.com/user-attachments/assets/9bb58601-f21e-46a5-b60b-0e3b37aaf128
 
 
-Frontolimbic Functional Connectivity Development from Birth to Emerging Adulthood
+**Frontolimbic Functional Connectivity Development from Birth to Emerging Adulthood**
 
 Code is organized sequentially: Alphabets mark scripts for different parts of the study, and numbers mark the order in which the code need to be executed.
 In general the later scripts are dependent on files created from earlier scripts (e.g., A_1 execution required for almost all following scripts).
