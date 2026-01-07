@@ -1,7 +1,11 @@
 # frontolimbic_fc_dev
 
-<video src="https://github.com/user-attachments/assets/9bb58601-f21e-46a5-b60b-0e3b37aaf128" controls="controls" width="100">
-</video>
+
+<br>
+<div align="center">
+  <video src="https://github.com/user-attachments/assets/9bb58601-f21e-46a5-b60b-0e3b37aaf128" width="400" />
+</div>
+<br>
 
 
 Frontolimbic Functional Connectivity Development from Birth to Emerging Adulthood
