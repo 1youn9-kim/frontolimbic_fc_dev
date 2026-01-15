@@ -1,6 +1,5 @@
 clear; clc;
 
-
 Top = '/data/project';
 Path = '/data/project/HCPDfMRI/fmriresults01/';
 addpath(genpath(fullfile(Top, 'tools')));
@@ -77,10 +76,20 @@ for s = 1:height(subjects_to_process_info)
 
         bold_data = bold_data_interp(5:end, :);
         
-        motion_12p = load(motion_path); motion_12p = motion_12p(5:end, :);
+        motion_raw = load(motion_path); motion_raw = motion_raw(6:end, :);
+        motion_12p = motion_raw(:, 1:12);
         motion_24p = [motion_12p, motion_12p.^2];
         
-        X = [ones(size(motion_24p, 1), 1), motion_24p];
+        n_frames = size(bold_data, 1);
+        TR = 0.8; 
+        cutoff = 128; 
+        n_cosine = floor(2 * n_frames * TR / cutoff) + 1;
+        cosine_basis = zeros(n_frames, n_cosine);
+        for c = 1:n_cosine
+            cosine_basis(:, c) = cos(pi * (c-1) * ((0:n_frames-1)+0.5) / n_frames);
+        end
+        
+        X = [motion_24p, cosine_basis]; 
         beta = X \ bold_data;
         residuals = bold_data - X * beta;
         
@@ -88,7 +97,6 @@ for s = 1:height(subjects_to_process_info)
     end
     
     if numel(all_cleaned_residuals) < 4
-        if ~at_least_one_run_found, end
         continue;
     end
     
