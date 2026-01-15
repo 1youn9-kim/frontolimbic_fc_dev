@@ -237,44 +237,110 @@ hcpd_gamlss_table = readtable(hcpd_gamlss_file);
 hcpd_master_table = innerjoin(hcpd_subs_master_table, hcpd_fd_table, 'Keys', 'src_subject_id');
 hcpd_master_table = innerjoin(hcpd_master_table, hcpd_icv_table, 'Keys', 'src_subject_id');
 hcpd_master_table = innerjoin(hcpd_master_table, hcpd_gamlss_table, 'Keys', 'src_subject_id');
-hcpd_master_table = renamevars(hcpd_master_table, 'deltar_h_zscore', 'BehaviorZscore');
-all_fmri_files = dir(fullfile(hcpd_ts_dir, '*_MR'));
-fmri_ids = extractBefore({all_fmri_files.name}, '_V1_MR')';
-[~, subs_idx, ~] = intersect(hcpd_master_table.src_subject_id, fmri_ids);
+hcpd_master_table = renamevars(hcpd_master_table, 'deltar_a_zscore', 'BehaviorZscore');
+
+all_fmri_files = dir(fullfile(hcpd_ts_dir, 'HCD*'));
+subject_folders = {all_fmri_files.name};
+[~, subs_idx, ~] = intersect(hcpd_master_table.src_subject_id, subject_folders);
 hcpd_subs_to_process = hcpd_master_table(subs_idx, :);
 n_subj_hcpd = height(hcpd_subs_to_process);
-hipp_vox_idx_hcpd = find(ismember(parc, [1, 9])); 
+
+amyg_vox_idx_hcpd = find(ismember(parc, [2, 10])); 
+run_names = {'rfMRI_REST1_AP', 'rfMRI_REST1_PA', 'rfMRI_REST2_AP', 'rfMRI_REST2_PA', ...
+             'rfMRI_REST1a_AP', 'rfMRI_REST1a_PA', 'rfMRI_REST1b_PA', ...
+             'rfMRI_REST2a_AP', 'rfMRI_REST2a_PA', 'rfMRI_REST2b_AP'};
+
 for s = 1:n_subj_hcpd
     subj_id = hcpd_subs_to_process.src_subject_id{s};
     output_filename = fullfile(hcpd_fc_output_dir, sprintf('SessionFC_sub-%s.mat', subj_id));
+    
     if force_rerun_hcpd_calc || ~exist(output_filename, 'file')
-        ts_path = fullfile(hcpd_ts_dir, [subj_id '_V1_MR'], 'MNINonLinear/Results/rfMRI_REST/rfMRI_REST_Atlas_MSMAll_hp0_clean.dtseries.nii');
-        if ~isfile(ts_path), continue; end
-        rest = cifti_read(ts_path);
-        A = normalize(rest.cdata, 2);
-        ts_hipp_avg = mean(A(hipp_vox_idx_hcpd, :), 1);
+        all_cleaned_residuals = {};
+        
+        for r = 1:numel(run_names)
+            run_name = run_names{r};
+            base_path = fullfile(hcpd_ts_dir, subj_id, 'MNINonLinear/Results/', run_name);
+            ts_path = fullfile(base_path, [run_name '_Atlas_MSMAll_hp0_clean.dtseries.nii']);
+            fd_path = fullfile(base_path, 'Movement_RelativeRMS.txt');
+            motion_path = fullfile(base_path, 'Movement_Regressors.txt');
+            
+            if ~isfile(ts_path) || ~isfile(fd_path) || ~isfile(motion_path), continue; end
+            
+            fd_col = load(fd_path);
+            if (sum(fd_col > 0.5) / numel(fd_col)) * 100 > 20, continue; end
+            
+            rest = cifti_read(ts_path);
+            bold_data_full = rest.cdata';
+            
+            % Scrubbing and Interpolation
+            scrub_idx = find(fd_col > 0.5);
+            frames_to_censor = [];
+            for k = 1:length(scrub_idx)
+                frames_to_censor = [frames_to_censor, (scrub_idx(k)-1):(scrub_idx(k)+2)];
+            end
+            frames_to_censor = unique(frames_to_censor);
+            frames_to_censor(frames_to_censor < 1 | frames_to_censor > size(bold_data_full, 1)) = [];
+            
+            bold_data_interp = bold_data_full;
+            if ~isempty(frames_to_censor)
+                good_frames = setdiff(1:size(bold_data_full, 1), frames_to_censor);
+                for v = 1:size(bold_data_full, 2)
+                    bold_data_interp(frames_to_censor, v) = interp1(good_frames, bold_data_full(good_frames, v), frames_to_censor, 'linear', 'extrap');
+                end
+            end
+            bold_data = bold_data_interp(5:end, :);
+            
+            % Nuisance Regression (24 Motion + Cosine Basis)
+            motion_raw = load(motion_path); motion_raw = motion_raw(6:end, :);
+            motion_12p = motion_raw(:, 1:12);
+            motion_24p = [motion_12p, motion_12p.^2];
+            
+            n_frames = size(bold_data, 1);
+            TR = 0.8; cutoff = 128; 
+            n_cosine = floor(2 * n_frames * TR / cutoff) + 1;
+            cosine_basis = zeros(n_frames, n_cosine);
+            for c = 1:n_cosine
+                cosine_basis(:, c) = cos(pi * (c-1) * ((0:n_frames-1)+0.5) / n_frames);
+            end
+            
+            X = [motion_24p, cosine_basis]; 
+            beta = X \ bold_data;
+            residuals = bold_data - X * beta;
+            all_cleaned_residuals{end+1} = normalize(residuals);
+        end
+        
+        if numel(all_cleaned_residuals) < 4, continue; end
+        
+        % FC Calculation on concatenated data
+        final_residuals_cat = cat(1, all_cleaned_residuals{:});
+        A = final_residuals_cat';
+        ts_amyg_avg = mean(A(amyg_vox_idx_hcpd, :), 1);
         ts_ctx = A(ctx_vertex_idx, :);
+        
         out_struct = struct();
         out_struct.subj_id = subj_id;
-        out_struct.mean_hipp_fc_vs_frontal_cortex = corr(ts_hipp_avg', ts_ctx');
+        out_struct.mean_amyg_fc_vs_frontal_cortex = corr(ts_amyg_avg', ts_ctx');
         save(output_filename, '-struct', 'out_struct');
     end
 end
+
 hcpd_files = dir(fullfile(hcpd_fc_output_dir, 'SessionFC_sub-*.mat'));
 n_subj_hcpd = length(hcpd_files);
 hcpd_raw_fc_data = nan(n_subj_hcpd, n_vertices);
 subj_ids_hcpd = cell(n_subj_hcpd, 1);
+
 for s = 1:n_subj_hcpd
     D = load(fullfile(hcpd_files(s).folder, hcpd_files(s).name));
-    if isfield(D, 'mean_hipp_fc_vs_frontal_cortex')
-        hcpd_raw_fc_data(s,:) = D.mean_hipp_fc_vs_frontal_cortex;
-    elseif isfield(D, 'mean_amyg_fc_vs_frontal_cortex')
+    if isfield(D, 'mean_amyg_fc_vs_frontal_cortex')
         hcpd_raw_fc_data(s,:) = D.mean_amyg_fc_vs_frontal_cortex;
+    elseif isfield(D, 'mean_hipp_fc_vs_frontal_cortex')
+        hcpd_raw_fc_data(s,:) = D.mean_hipp_fc_vs_frontal_cortex;
     else
         error('File %s missing FC data field.', hcpd_files(s).name);
     end
     subj_ids_hcpd{s} = D.subj_id;
 end
+
 [~, master_idx] = ismember(subj_ids_hcpd, hcpd_master_table.src_subject_id);
 aligned_cov_table = hcpd_master_table(master_idx(master_idx > 0), :);
 aligned_fc_data = hcpd_raw_fc_data(master_idx > 0, :);
