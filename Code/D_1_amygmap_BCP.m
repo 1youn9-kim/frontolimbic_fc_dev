@@ -388,6 +388,7 @@ harmonized_master_fc_z = harmonized_dat';
 
 raw_fc_data_z = harmonized_master_fc_z(is_bcp_row, :);
 subs_metadata = master_covariates(is_bcp_row, :);
+subs_metadata.interview_age = subs_metadata.interview_age / 12;
 
 %% Normalization
 mean_per_row = mean(raw_fc_data_z, 2, 'omitnan');

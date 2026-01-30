@@ -72,8 +72,7 @@ for s = 1:height(subs)
     
     residuals = bold_data - [ones(size(nuisance, 1), 1), nuisance] * ([ones(size(nuisance, 1), 1), nuisance] \ bold_data);
 
-    final_residuals_cat = cat(1, residuals{:});
-    A = final_residuals_cat';
+    A = residuals';
     ts_amyg_avg = mean(A(find(ismember(parc, [2, 10])), :), 1);
     ts_ctx = A(ctx_vertex_idx, :);
     
@@ -103,8 +102,8 @@ for i = 1:length(age_bins)
     final_map_all = tanh(mean(harmonized_data_z(idx, :), 1, 'omitnan'))';
     out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map_all;
     cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_AgeBin%02d_all.dscalar.nii', age_bins(i))));
-    corrmat_m_all(i) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map_all(medial_idx), 'rows','complete');
-    corrmat_l_all(i) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
+    corrmat_m_all(i) = corr(ref_vec(medial_idx), final_map_all(medial_idx), 'rows','complete');
+    corrmat_l_all(i) = corr(ref_vec(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
     
     z_scr = subs.(zscore_col_name)(idx);
     if length(z_scr) < 3, continue; end
@@ -120,9 +119,9 @@ for i = 1:length(age_bins)
         final_map = tanh(mean(harmonized_data_z(s_idx, :), 1, 'omitnan'))';
         out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map;
         cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_AgeBin%02d_%s.dscalar.nii', age_bins(i), g_labs{g})));
-        corrmat_m(i,g) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map(medial_idx), 'rows','complete');
-        corrmat_l(i,g) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map(lateral_idx), 'rows','complete');
-        corrmat_c(i,g) = corr(ref_AvH_Tmap_frontal, final_map, 'rows','complete');
+        corrmat_m(i,g) = corr(ref_vec(medial_idx), final_map(medial_idx), 'rows','complete');
+        corrmat_l(i,g) = corr(ref_vec(lateral_idx), final_map(lateral_idx), 'rows','complete');
+        corrmat_c(i,g) = corr(ref_vec, final_map, 'rows','complete');
     end
 end
 writematrix(corrmat_m, fullfile(output_dir, 'AmygAvgFC_PNC_Denoised_AgeBinYearly_CorrWRef_medial.csv'));
@@ -144,8 +143,8 @@ for i = 1:3
     final_map_all = tanh(mean(harmonized_data_z(idx, :), 1, 'omitnan'))';
     out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map_all;
     cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_all.dscalar.nii', labs{i})));
-    corrmat_m_all_3(i) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map_all(medial_idx), 'rows','complete');
-    corrmat_l_all_3(i) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
+    corrmat_m_all_3(i) = corr(ref_vec(medial_idx), final_map_all(medial_idx), 'rows','complete');
+    corrmat_l_all_3(i) = corr(ref_vec(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
     
     z_scr = subs.(zscore_col_name)(idx);
     beh_tertiles = quantile(z_scr, [1/3, 2/3]);
@@ -159,9 +158,9 @@ for i = 1:3
         final_map = tanh(mean(harmonized_data_z(s_idx, :), 1, 'omitnan'))';
         out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map;
         cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_%s.dscalar.nii', labs{i}, g_labs{g})));
-        corrmat_m_3(i,g) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map(medial_idx), 'rows','complete');
-        corrmat_l_3(i,g) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map(lateral_idx), 'rows','complete');
-        corrmat_c_3(i,g) = corr(ref_AvH_Tmap_frontal, final_map, 'rows','complete');
+        corrmat_m_3(i,g) = corr(ref_vec(medial_idx), final_map(medial_idx), 'rows','complete');
+        corrmat_l_3(i,g) = corr(ref_vec(lateral_idx), final_map(lateral_idx), 'rows','complete');
+        corrmat_c_3(i,g) = corr(ref_vec, final_map, 'rows','complete');
     end
 end
 writematrix(corrmat_m_3, fullfile(output_dir, 'AmygAvgFC_PNC_Denoised_AgeBin3Split_CorrWRef_medial.csv'));
@@ -183,8 +182,8 @@ for i = 1:4
     final_map_all = tanh(mean(harmonized_data_z(idx, :), 1, 'omitnan'))';
     out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map_all;
     cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_all.dscalar.nii', labs{i})));
-    corrmat_m_all_4(i) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map_all(medial_idx), 'rows','complete');
-    corrmat_l_all_4(i) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
+    corrmat_m_all_4(i) = corr(ref_vec(medial_idx), final_map_all(medial_idx), 'rows','complete');
+    corrmat_l_all_4(i) = corr(ref_vec(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
     
     z_scr = subs.(zscore_col_name)(idx);
     beh_tertiles = quantile(z_scr, [1/3, 2/3]);
@@ -198,9 +197,9 @@ for i = 1:4
         final_map = tanh(mean(harmonized_data_z(s_idx, :), 1, 'omitnan'))';
         out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map;
         cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_%s.dscalar.nii', labs{i}, g_labs{g})));
-        corrmat_m_4(i,g) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map(medial_idx), 'rows','complete');
-        corrmat_l_4(i,g) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map(lateral_idx), 'rows','complete');
-        corrmat_c_4(i,g) = corr(ref_AvH_Tmap_frontal, final_map, 'rows','complete');
+        corrmat_m_4(i,g) = corr(ref_vec(medial_idx), final_map(medial_idx), 'rows','complete');
+        corrmat_l_4(i,g) = corr(ref_vec(lateral_idx), final_map(lateral_idx), 'rows','complete');
+        corrmat_c_4(i,g) = corr(ref_vec, final_map, 'rows','complete');
     end
 end
 writematrix(corrmat_m_4, fullfile(output_dir, 'AmygAvgFC_PNC_Denoised_AgeBin4Split_CorrWRef_medial.csv'));
@@ -222,8 +221,8 @@ for i = 1:2
     final_map_all = tanh(mean(harmonized_data_z(idx, :), 1, 'omitnan'))';
     out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map_all;
     cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_all.dscalar.nii', labs{i})));
-    corrmat_m_all_2(i) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map_all(medial_idx), 'rows','complete');
-    corrmat_l_all_2(i) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
+    corrmat_m_all_2(i) = corr(ref_vec(medial_idx), final_map_all(medial_idx), 'rows','complete');
+    corrmat_l_all_2(i) = corr(ref_vec(lateral_idx), final_map_all(lateral_idx), 'rows','complete');
     
     z_scr = subs.(zscore_col_name)(idx);
     beh_tertiles = quantile(z_scr, [1/3, 2/3]);
@@ -237,9 +236,9 @@ for i = 1:2
         final_map = tanh(mean(harmonized_data_z(s_idx, :), 1, 'omitnan'))';
         out_cifti = template; out_cifti.cdata(ctx_vertex_idx) = final_map;
         cifti_write(out_cifti, fullfile(output_dir, sprintf('AmygAvgFC_PNC_Denoised_%s_%s.dscalar.nii', labs{i}, g_labs{g})));
-        corrmat_m_2(i,g) = corr(ref_AvH_Tmap_frontal(medial_idx), final_map(medial_idx), 'rows','complete');
-        corrmat_l_2(i,g) = corr(ref_AvH_Tmap_frontal(lateral_idx), final_map(lateral_idx), 'rows','complete');
-        corrmat_c_2(i,g) = corr(ref_AvH_Tmap_frontal, final_map, 'rows','complete');
+        corrmat_m_2(i,g) = corr(ref_vec(medial_idx), final_map(medial_idx), 'rows','complete');
+        corrmat_l_2(i,g) = corr(ref_vec(lateral_idx), final_map(lateral_idx), 'rows','complete');
+        corrmat_c_2(i,g) = corr(ref_vec, final_map, 'rows','complete');
     end
 end
 writematrix(corrmat_m_2, fullfile(output_dir, 'AmygAvgFC_PNC_Denoised_AgeBin2Split_CorrWRef_medial.csv'));

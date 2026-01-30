@@ -74,8 +74,7 @@ for s = 1:height(subs)
     nuisance = table2array(conf_table(:, [motion_24p, {'white_matter', 'csf'}, dct_cols]));
     nuisance(isnan(nuisance)) = 0;
     
-    final_residuals_cat = cat(1, residuals{:});
-    A = final_residuals_cat';
+    A = residuals';
     ts_hipp_avg = mean(A(find(ismember(parc, [1,9])), :), 1);
     ts_ctx = A(ctx_vertex_idx, :);
     
