@@ -17,7 +17,6 @@ ctx_vertex_idx = find(ismember(parc, ROI_frontal_cortex));
 medial_idx = find(ismember(ctx_vertex_idx, find(ismember(parc,medial))));
 lateral_idx = find(ismember(ctx_vertex_idx, find(ismember(parc,lateral))));
 subcort_all_idx = find(parc >= 1 & parc <= 16);
-amyg_mask_sub = ismember(parc(subcort_all_idx), [2, 10]);
 
 HCPref = load(fullfile(Top, 'derivatives/FC_reference_HCP/FC_reference_HCP_scan1.mat'));
 ref = HCPref.FC_mean; 
@@ -72,9 +71,14 @@ for s = 1:height(subs)
     nuisance(isnan(nuisance)) = 0;
     
     residuals = bold_data - [ones(size(nuisance, 1), 1), nuisance] * ([ones(size(nuisance, 1), 1), nuisance] \ bold_data);
-    A = normalize(residuals', 2);
-    FC_vox_profile = corr(A(subcort_all_idx, :)', A(ctx_vertex_idx, :)');
-    raw_fc_data_r(s, :) = mean(FC_vox_profile(amyg_mask_sub, :), 1);
+
+    final_residuals_cat = cat(1, residuals{:});
+    A = final_residuals_cat';
+    ts_amyg_avg = mean(A(find(ismember(parc, [2, 10])), :), 1);
+    ts_ctx = A(ctx_vertex_idx, :);
+    
+    raw_fc_data_r(s, :) = corr(ts_amyg_avg', ts_ctx');
+
 end
 subs = subs(valid_subj_mask, :);
 raw_fc_data_r = raw_fc_data_r(valid_subj_mask, :);

@@ -74,10 +74,12 @@ for s = 1:height(subs)
     nuisance = table2array(conf_table(:, [motion_24p, {'white_matter', 'csf'}, dct_cols]));
     nuisance(isnan(nuisance)) = 0;
     
-    residuals = bold_data - [ones(size(nuisance, 1), 1), nuisance] * ([ones(size(nuisance, 1), 1), nuisance] \ bold_data);
-    A = normalize(residuals', 2);
-    FC_vox_profile = corr(A(subcort_all_idx, :)', A(ctx_vertex_idx, :)');
-    raw_fc_data_r(s, :) = mean(FC_vox_profile(hip_mask_sub, :), 1);
+    final_residuals_cat = cat(1, residuals{:});
+    A = final_residuals_cat';
+    ts_hipp_avg = mean(A(find(ismember(parc, [1,9])), :), 1);
+    ts_ctx = A(ctx_vertex_idx, :);
+    
+    raw_fc_data_r(s, :) = corr(ts_hipp_avg', ts_ctx');
 end
 subs = subs(valid_subj_mask, :);
 raw_fc_data_r = raw_fc_data_r(valid_subj_mask, :);
