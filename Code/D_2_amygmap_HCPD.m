@@ -120,20 +120,17 @@ if force_rerun_stage1 || ~session_files_exist
             beta = X \ bold_data;
             residuals = bold_data - X * beta;
 
-            A = normalize(residuals', 2);
-            ts_sub = A(subcort_all_idx, :); 
+
+            final_residuals_cat = cat(1, residuals{:});
+            A = final_residuals_cat';
+            ts_amyg_avg = mean(A(find(ismember(parc, [2, 10])), :), 1);
             ts_ctx = A(ctx_vertex_idx, :);
-
-            FC_vox_profile = corr(ts_sub', ts_ctx');
-
-            amyg_fc_patterns = FC_vox_profile(amyg_mask_subcort, :);
-            session_mean_amyg_fc = mean(amyg_fc_patterns, 1, 'omitnan');
             
             out_struct = struct();
             out_struct.subj_id = subj_id_short;
             out_struct.ses_name = ses_name;
             out_struct.run_used = run_str;
-            out_struct.mean_amyg_fc_vs_frontal_cortex = session_mean_amyg_fc;
+            out_struct.mean_amyg_fc_vs_frontal_cortex = corr(ts_amyg_avg', ts_ctx');
             output_filename = fullfile(session_fc_output_dir, sprintf('SessionFC_sub-%s_%s.mat', subj_id_short, ses_name));
             save(output_filename, '-struct', 'out_struct');
         end
@@ -245,7 +242,6 @@ subject_folders = {all_fmri_files.name};
 hcpd_subs_to_process = hcpd_master_table(subs_idx, :);
 n_subj_hcpd = height(hcpd_subs_to_process);
 
-amyg_vox_idx_hcpd = find(ismember(parc, [2, 10])); 
 run_names = {'rfMRI_REST1_AP', 'rfMRI_REST1_PA', 'rfMRI_REST2_AP', 'rfMRI_REST2_PA', ...
              'rfMRI_REST1a_AP', 'rfMRI_REST1a_PA', 'rfMRI_REST1b_PA', ...
              'rfMRI_REST2a_AP', 'rfMRI_REST2a_PA', 'rfMRI_REST2b_AP'};
@@ -314,7 +310,7 @@ for s = 1:n_subj_hcpd
         % FC Calculation on concatenated data
         final_residuals_cat = cat(1, all_cleaned_residuals{:});
         A = final_residuals_cat';
-        ts_amyg_avg = mean(A(amyg_vox_idx_hcpd, :), 1);
+        ts_amyg_avg = mean(A(find(ismember(parc, [2, 10])), :), 1);
         ts_ctx = A(ctx_vertex_idx, :);
         
         out_struct = struct();
