@@ -1,7 +1,7 @@
 clear; clc;
 
 Top = '/data/projects';
-input_dir = '/data/projects/punim2400/derivatives/PNC/corr_maps';
+input_dir = '/data/projects/derivatives/PNC/corr_maps';
 out_dir = fullfile(input_dir, 'differentiation');
 if ~exist(out_dir, 'dir'), mkdir(out_dir); end
 addpath(genpath(fullfile(Top, 'tools')));

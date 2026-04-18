@@ -1,6 +1,6 @@
 clear; clc;
 
-Top = '/data/project';
+Top = '/data/projects';
 Path = fullfile(Top, 'HCPDfMRI/fmriresults01');
 Sub = dir(fullfile(Path, '*_MR'));
 addpath(genpath(fullfile(Top, 'tools')));

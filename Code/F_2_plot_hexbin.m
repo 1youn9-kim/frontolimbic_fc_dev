@@ -21,8 +21,7 @@ hold(ax, 'off');
 box off;
 set(gca, 'TickDir', 'out');
 xlabel('Cumulative Adversity');
-ylabel('Amygdala delta-r Z-score');
-title('Adversity vs Amygdala Differentiation');
+ylabel('Amygdala DI Z-score');
 
 %% Cognition
 x = cog_deltar_z.nih_totalcogcomp_ageadjusted;
@@ -47,5 +46,4 @@ hold(ax, 'off');
 box off;
 set(gca, 'TickDir', 'out', 'TickLength', [0 0]);
 xlabel('Cognitive Ability (Age Adjusted)');
-ylabel('Amygdala delta-r Z-score'); 
-title('Cognition vs Amygdala Differentiation');
+ylabel('Amygdala DI Z-score');

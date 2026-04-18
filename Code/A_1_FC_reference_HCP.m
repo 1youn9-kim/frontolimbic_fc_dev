@@ -2,9 +2,10 @@ clear; clc;
 
 Data = '/data/datasets/connectome/WU-Minn_HCP/3T_rfMRI_REST_fix';
 MotionRoot = '/data/datasets/connectome/WU-Minn_HCP/RS-fMRI1_preproc';
-Top = '/data/project';
+Top = '/data/projects';
 Path = fullfile(Top, 'HCPDfMRI/fmriresults01');
-Sub = dir(fullfile(Data, '??????'));
+Sub = dir(Data);
+Sub = Sub([Sub.isdir] & ~ismember({Sub.name}, {'.', '..'}));
 
 addpath(genpath(Path));
 addpath(genpath(fullfile(Top, 'tools')));
@@ -41,7 +42,7 @@ for s = 1:height(Sub)
     for r = 1:2
         run = runs{r};
 
-        ts_path = fullfile(Data, sid, 'MNINonLinear/Results', run, [run '_Atlas_MSMAll_hp0_clean.dtseries.nii']);
+        ts_path = fullfile(Data, sid, 'MNINonLinear/Results', run, [run '_Atlas_MSMAll_hp2000_clean.dtseries.nii']);
         
         ts_mov = fullfile(MotionRoot, sid, 'MNINonLinear/Results', run);
         fd_path = fullfile(ts_mov, 'Movement_RelativeRMS.txt');
@@ -107,7 +108,7 @@ for s = 1:height(Sub)
     
     for r = 1:2
         run = runs{r};
-        ts_path = fullfile(Data, sid, 'MNINonLinear/Results', run, [run '_Atlas_MSMAll_hp0_clean.dtseries.nii']);
+        ts_path = fullfile(Data, sid, 'MNINonLinear/Results', run, [run '_Atlas_MSMAll_hp2000_clean.dtseries.nii']);
         
         ts_mov = fullfile(MotionRoot, sid, 'MNINonLinear/Results', run);
         fd_path = fullfile(ts_mov, 'Movement_RelativeRMS.txt');

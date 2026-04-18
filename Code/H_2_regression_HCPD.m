@@ -1,7 +1,7 @@
 clear; clc;
 
-Top = '/data/project';
-Path = '/data/project/HCPDfMRI/fmriresults01/';
+Top = '/data/projects';
+Path = '/data/projects/HCPDfMRI/fmriresults01/';
 addpath(genpath(fullfile(Top, 'tools')));
 
 subs_table = readtable(fullfile(Top, 'HCPDfMRI/ndar_subject01.txt'));

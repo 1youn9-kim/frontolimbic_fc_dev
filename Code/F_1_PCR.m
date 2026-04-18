@@ -1,7 +1,11 @@
 clear; clc;
 
 
-output_dir = 'PCR_Results_Final';
+Top = '/data/projects';
+Path = '/data/projects/HCPDfMRI/fmriresults01/';
+addpath(genpath(fullfile(Top, 'tools')));
+
+output_dir = fullfile(Top, 'derivatives/PCR_Results_Final');
 if ~exist(output_dir, 'dir'); mkdir(output_dir); end
 
 analyses = struct();
@@ -133,5 +137,3 @@ for a = 1:length(analyses)
     saveas(f, fullfile(output_dir, [analyses(a).name '_FeatureImportance.png']));
     close(f);
 end
-
-disp('Analysis complete.');

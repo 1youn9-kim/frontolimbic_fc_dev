@@ -1,5 +1,5 @@
 clear; clc;
-Top = '/data/projects/punim2400'; 
+Top = '/data/projects'; 
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
 Path = fullfile(bcp_project_dir, 'derivatives', 'nibabies', 'sourcedata', 'freesurfer');
 subject_list_file = fullfile(bcp_project_dir, 'final_sublist.txt');

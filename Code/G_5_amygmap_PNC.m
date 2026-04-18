@@ -1,7 +1,7 @@
 clear; clc;
 
 
-Top = '/data/project';
+Top = '/data/projects';
 Path = fullfile(Top, 'PNC/Data'); 
 addpath(genpath(fullfile(Top, 'tools')));
 output_dir = fullfile(Top, 'derivatives/binned_fc_maps_amyg_PNC');

@@ -1,6 +1,6 @@
 clear; clc; 
 
-Top = '/data/projects/punim2400';
+Top = '/data/projects';
 addpath(genpath(fullfile(Top, 'tools')));
 
 amyg_idx = [2,10]; hipp_idx = [1,9];

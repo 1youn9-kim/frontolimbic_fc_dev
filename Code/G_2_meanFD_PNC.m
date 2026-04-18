@@ -1,9 +1,9 @@
 clear; clc; 
 
-Top = '/data/project';
+Top = '/data/projects';
 addpath(genpath(fullfile(Top, 'tools')));
 
-input_dir = '/data/project/derivatives/PNC/corr_maps';
+input_dir = '/data/projects/derivatives/PNC/corr_maps';
 files = dir(fullfile(input_dir, 'CorrVals_AmygHipOnly_*.mat'));
 tmp = load(fullfile(input_dir, files(1).name));
 common_voxel_labels = tmp.subcortical_labels;

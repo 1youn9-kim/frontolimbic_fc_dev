@@ -1,7 +1,7 @@
 clear; clc;
 
-Top = '/data/project';
-Path = '/data/project/HCPDfMRI/fmriresults01/';
+Top = '/data/projects';
+Path = '/data/projects/HCPDfMRI/fmriresults01/';
 addpath(genpath(fullfile(Top, 'tools')));
 
 subs_table = readtable(fullfile(Top, 'HCPDfMRI/ndar_subject01.txt'));
@@ -76,7 +76,7 @@ for s = 1:height(subjects_to_process_info)
 
         bold_data = bold_data_interp(5:end, :);
         
-        motion_raw = load(motion_path); motion_raw = motion_raw(6:end, :);
+        motion_raw = load(motion_path); motion_raw = motion_raw(5:end, :);
         motion_12p = motion_raw(:, 1:12);
         motion_24p = [motion_12p, motion_12p.^2];
         

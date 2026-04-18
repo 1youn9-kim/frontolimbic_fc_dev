@@ -1,8 +1,11 @@
 clear; clc;
-addpath('/Users/wil/research/tools/');
 
-dir_amyg = 'SAaxis_network_mapping_amyg_detailed';
-dir_hipp = 'SAaxis_network_mapping_hipp_detailed';
+Top = '/data/projects';
+Path = '/data/projects/HCPDfMRI/fmriresults01/';
+addpath(genpath(fullfile(Top, 'tools')));
+
+dir_amyg = fullfile(Top, 'derivatives/SAaxis_network_mapping_amyg_detailed');
+dir_hipp = fullfile(Top, 'derivatives/SAaxis_network_mapping_hipp_detailed');
 
 file_glasser = 'Q1-Q6_RelatedValidation210.CorticalAreas_dil_Final_Final_Areas_Group_Colors.32k_fs_LR_Tian_Subcortex_S1.dlabel.nii';
 file_schaefer = 'Schaefer2018_400Parcels_7Networks_order_Tian_Subcortex_S1.dlabel.nii';

@@ -1,10 +1,8 @@
 clear; clc;
-
-Top = '/data/projects/punim2400';
+Top = '/data/projects';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
 search_root = fullfile(bcp_project_dir, 'derivatives', 'nibabies');
 output_dir = fullfile(Top, 'derivatives', 'BCP_FC_Analysis');
-
 dd = dir(fullfile(search_root, '**', '*_desc-confounds_timeseries.tsv'));
 results = {};
 
@@ -23,7 +21,6 @@ for i = 1:length(dd)
     
     T = readtable(filepath, 'FileType', 'text', 'Delimiter', '\t', ...
             'TreatAsEmpty', {'n/a','NA'}, 'VariableNamingRule', 'preserve');
-
     fd_col = T.framewise_displacement;
     
     if isempty(fd_col) || height(T) < 2, continue; end
@@ -36,5 +33,20 @@ end
 
 if ~isempty(results)
     G = cell2table(results, 'VariableNames', {'src_subject_id', 'session', 'run', 'MeanFD'});
+    
+    G = sortrows(G, {'src_subject_id', 'session'});
+    
+    curr_sub = ""; curr_ses = ""; run_counter = 1;
+    for i = 1:height(G)
+        if strcmp(G.src_subject_id{i}, curr_sub) && strcmp(G.session{i}, curr_ses)
+            run_counter = run_counter + 1;
+        else
+            run_counter = 1;
+            curr_sub = G.src_subject_id{i};
+            curr_ses = G.session{i};
+        end
+        G.run(i) = string(run_counter);
+    end
+    
     writetable(G, fullfile(output_dir, 'mean_fd_run_BCP.csv'));
 end

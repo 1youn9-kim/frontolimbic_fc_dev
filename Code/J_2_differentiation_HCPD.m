@@ -1,7 +1,7 @@
 clear; clc; 
 
 
-Top = '/data/project';
+Top = '/data/projects';
 addpath(genpath(fullfile(Top, 'tools')));
 
 

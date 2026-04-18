@@ -1,6 +1,6 @@
 clear; clc;
 
-Top = '/data/project';
+Top = '/data/projects';
 Path = fullfile(Top, '/PNC/DataProcessed/sourcedata/freesurfer');
 SubDirs = dir(fullfile(Path, 'sub_*'));
 n_subj = length(SubDirs);

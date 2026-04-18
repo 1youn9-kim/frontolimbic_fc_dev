@@ -81,7 +81,7 @@ sigma_formula <- ~ fp(age,npoly=2)
 nu_formula <- ~ fp(age,npoly=1)
 tau_formula <- ~ fp(age,npoly=1)
 
-best_dist_name <- "SEP3"
+best_dist_name <- "ST2"
 
 y_formula <- as.formula(paste(feature, "~", as.character(mu_formula)[2]))
 zscores_outofsample <- matrix(data = NA, nrow = nrow(model_data), ncol = 1)
@@ -136,7 +136,7 @@ sigma_formula <- ~ fp(age,npoly=2)
 nu_formula <- ~ fp(age,npoly=1)
 tau_formula <- ~ fp(age,npoly=1)
 
-best_dist_name <- "TF2"
+best_dist_name <- "PE"
 
 y_formula <- as.formula(paste(feature, "~", as.character(mu_formula)[2]))
 zscores_outofsample <- matrix(data = NA, nrow = nrow(model_data), ncol = 1)

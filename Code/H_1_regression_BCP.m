@@ -1,6 +1,6 @@
 clear; clc;
 
-Top = '/data/project';
+Top = '/data/projects';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
 nibabies_dir = fullfile(bcp_project_dir, 'derivatives/nibabies');
 
@@ -86,8 +86,8 @@ for s = 1:numel(subjects_to_process)
                 end
             end
             
-            bold_data = bold_data_interp(6:end, :);
-            confounds_table = confounds_table_full(6:end, :);
+            bold_data = bold_data_interp(5:end, :);
+            confounds_table = confounds_table_full(5:end, :);
 
             mot6  = [confounds_table.trans_x, confounds_table.trans_y, confounds_table.trans_z, confounds_table.rot_x, confounds_table.rot_y, confounds_table.rot_z];
             dmot6 = [zeros(1,6); diff(mot6)];

@@ -1,7 +1,7 @@
 clear; clc;
 
 
-Top = '/data/project';
+Top = '/data/projects';
 bcp_project_dir = fullfile(Top, 'BABY/image03/BCP');
 nibabies_dir = fullfile(bcp_project_dir, 'derivatives/nibabies');
 subject_list_file = fullfile(bcp_project_dir, 'final_sublist.txt');
@@ -107,8 +107,8 @@ if force_rerun_stage1 || ~session_files_exist
                 end
             end
 
-            bold_data = bold_data_interp(6:end, :);
-            confounds_table = confounds_table_full(6:end, :);
+            bold_data = bold_data_interp(5:end, :);
+            confounds_table = confounds_table_full(5:end, :);
             mot6  = [confounds_table.trans_x, confounds_table.trans_y, confounds_table.trans_z, confounds_table.rot_x, confounds_table.rot_y, confounds_table.rot_z];
             dmot6 = [zeros(1,6); diff(mot6)];
             mot24 = [mot6, dmot6, mot6.^2, dmot6.^2];
