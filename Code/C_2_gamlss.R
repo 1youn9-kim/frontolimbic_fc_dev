@@ -5,10 +5,11 @@ library(readr)
 library(caret)
 library(ggplot2)
 library(tidyr)
+library(scales)
 
 Top <- "/data/projects/punim2400"
 
-harmonized_scores_file <- file.path(Top, "derivatives", "MASTER_HARMONIZED_deltar_table_BCPHCPD.csv")
+harmonized_scores_file <- file.path(Top, "derivatives", "MASTER_HARMONIZED_deltar_table_LEVEL2_HCPDBCP_last_final.csv")
 harmonized_table <- read_csv(harmonized_scores_file)
 
 output_dir <- file.path(Top, "derivatives", "gamlss_scores_BCPHCPD")
@@ -28,14 +29,13 @@ model_data <- master_table %>%
   mutate(
     age = as.numeric(interview_age),
     sex = as.factor(sex),
-    race = as.factor(race),
     site = as.factor(site)
   )
 
-mu_formula <- ~ fp(age,npoly=2) + sex + race + random(site)
-sigma_formula <- ~fp(age,npoly=2)
-nu_formula <- ~fp(age,npoly=2)
-tau_formula <- ~fp(age,npoly=2)
+mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
+sigma_formula <- ~fp(age,npoly=1)
+nu_formula <- ~poly(age,degree=2)
+tau_formula <- ~poly(age,degree=2)
 dist_list <- c("TF", "TF2", "JSU", "SHASH", "SEP1", "SEP2", "SEP3", "SEP4", "ST1", "ST2", "ST3", "ST4", "ST5", "PE", "PE2", "SN1",
                "SN2", "exGAUS", "EGB2", "GT", "JSUo", "NET", "SHASHo", "SHASHo2", "SST")
 
@@ -76,10 +76,10 @@ z_scores_df <- data.frame(src_subject_id = model_data$src_subject_id)
 nfolds <- 10
 
 feature = feature_names[1]
-mu_formula <- ~  fp(age,npoly=2) + sex + random(site)
-sigma_formula <- ~ fp(age,npoly=2)
-nu_formula <- ~ fp(age,npoly=1)
-tau_formula <- ~ fp(age,npoly=1)
+mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
+sigma_formula <- ~fp(age,npoly=1)
+nu_formula <- ~poly(age,degree=2)
+tau_formula <- ~poly(age,degree=2)
 
 best_dist_name <- "ST2"
 
@@ -131,10 +131,10 @@ z_scores_df[[paste0(feature, "_dist_used")]] <- best_dist_name
 
 # Hipp
 feature = feature_names[2]
-mu_formula <- ~  fp(age,npoly=2) + sex + random(site)
-sigma_formula <- ~ fp(age,npoly=2)
-nu_formula <- ~ fp(age,npoly=1)
-tau_formula <- ~ fp(age,npoly=1)
+mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
+sigma_formula <- ~fp(age,npoly=1)
+nu_formula <- ~poly(age,degree=2)
+tau_formula <- ~poly(age,degree=2)
 
 best_dist_name <- "PE"
 
@@ -207,10 +207,10 @@ pred_grid$site <- get_mode(model_data$site)
 
 centiles_to_plot <- c(0.05, 0.25, 0.50, 0.75, 0.95)
 
-mu_formula <- ~  fp(age,npoly=2) + sex + random(site)
-sigma_formula <- ~ fp(age,npoly=2)
-nu_formula <- ~ fp(age,npoly=2)
-tau_formula <- ~ fp(age,npoly=2)
+mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
+sigma_formula <- ~fp(age,npoly=1)
+nu_formula <- ~poly(age,degree=2)
+tau_formula <- ~poly(age,degree=2)
 
 feature = feature_names[1]
   
@@ -265,7 +265,7 @@ ggsave(plot_output_file, plot = normative_plot, width = 4, height = 4, dpi = 300
   
 plot_output_file_log <- file.path(output_dir, paste0("normative_plot_log_", feature, ".png"))
 ggsave(plot_output_file_log, plot = log_scaled_plot, width = 4, height = 4, dpi = 300)
-}
+
 summary(model_full)
 plot(model_full)
 
@@ -276,9 +276,9 @@ model_data$deltar_h = -model_data$deltar_h
 
 
 mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
-sigma_formula <- ~ fp(age,npoly=1)
-nu_formula <- ~ poly(age,npoly=2)
-tau_formula <- ~ poly(age,npoly=2)
+sigma_formula <- ~fp(age,npoly=1)
+nu_formula <- ~poly(age,degree=2)
+tau_formula <- ~poly(age,degree=2)
 
 feature = feature_names[2]
 
@@ -333,6 +333,95 @@ ggsave(plot_output_file, plot = normative_plot, width = 4, height = 4, dpi = 300
   
 plot_output_file_log <- file.path(output_dir, paste0("normative_plot_log_", feature, ".png"))
 ggsave(plot_output_file_log, plot = log_scaled_plot, width = 4, height = 4, dpi = 300)
-}
+
 summary(model_full)
 plot(model_full)
+
+# Age effects
+best_dists <- c("deltar_a" = "ST2", "deltar_h" = "PE")
+lm_results_df <- data.frame()
+all_effects_df <- data.frame()
+all_velocity_df <- data.frame()
+
+for (feature in feature_names) {
+  
+  data_pre5 <- model_data[model_data$age <= 5, ]
+  data_post5 <- model_data[model_data$age > 5, ]
+  
+  # scale vars for standardized beta
+  lm_pre5 <- lm(as.formula(paste0("scale(", feature, ") ~ scale(age)")), data = data_pre5)
+  lm_post5 <- lm(as.formula(paste0("scale(", feature, ") ~ scale(age)")), data = data_post5)
+  lm_total <- lm(as.formula(paste0("scale(", feature, ") ~ scale(age)")), data = model_data)
+  
+  lm_results_df <- rbind(lm_results_df, data.frame(
+    feature = feature,
+    period = "pre_5",
+    estimate = coef(summary(lm_pre5))["scale(age)", "Estimate"],
+    p_value = coef(summary(lm_pre5))["scale(age)", "Pr(>|t|)"]
+  ))
+  
+  lm_results_df <- rbind(lm_results_df, data.frame(
+    feature = feature,
+    period = "post_5",
+    estimate = coef(summary(lm_post5))["scale(age)", "Estimate"],
+    p_value = coef(summary(lm_post5))["scale(age)", "Pr(>|t|)"]
+  ))
+  
+  lm_results_df <- rbind(lm_results_df, data.frame(
+    feature = feature,
+    period = "total",
+    estimate = coef(summary(lm_total))["scale(age)", "Estimate"],
+    p_value = coef(summary(lm_total))["scale(age)", "Pr(>|t|)"]
+  ))
+  
+  dist_used <- best_dists[feature]
+  mu_full <- as.formula(paste(feature, "~ fp(age, npoly=1) + sex + random(site)"))
+  
+  fam_details <- gamlss.family(dist_used)
+  sigma_form <- if (fam_details$nopar >= 2) ~fp(age,npoly=1) else ~1
+  nu_form <- if (fam_details$nopar >= 3) ~poly(age,degree=2) else ~1
+  tau_form <- if (fam_details$nopar >= 4) ~poly(age,degree=2) else ~1
+  
+  model_full <- gamlss(
+    formula = mu_full, sigma.formula = sigma_form, nu.formula = nu_form, tau.formula = tau_form,
+    family = eval(parse(text = paste0(dist_used, "()"))),
+    data = model_data, n.cyc = 300, trace = FALSE
+  )
+  
+  age_col_idx <- grep("age", colnames(model_full$mu.s))
+  smooth_age_effect <- model_full$mu.s[, age_col_idx]
+  
+  effect_df <- data.frame(
+    age = model_data$age,
+    effect = smooth_age_effect,
+    feature = feature
+  ) %>%
+    group_by(age, feature) %>%
+    summarise(effect = mean(effect, na.rm = TRUE), .groups = 'drop') %>%
+    arrange(age)
+  
+  effect_df$effect <- effect_df$effect - effect_df$effect[1]
+  
+  effect_df$effect <- (effect_df$effect / max(effect_df$effect)) * 100
+  
+  all_effects_df <- rbind(all_effects_df, effect_df)
+
+}
+
+write_csv(lm_results_df, file.path(output_dir, "linear_age_effects.csv"))
+
+age1_df <- data.frame()
+for (f in unique(all_effects_df$feature)) {
+  f_data <- all_effects_df[all_effects_df$feature == f, ]
+  idx <- which.min(abs(f_data$age - 1))
+  age1_df <- rbind(age1_df, f_data[idx, ])
+}
+
+effect_plot <- ggplot(all_effects_df, aes(x = age, y = effect, color = feature)) +
+  geom_line(linewidth = 7) +
+  scale_x_sqrt(breaks = c(0.1, 0.5, 1, 2, 5, 10, 21), labels = c("0.1", "0.5", "1", "2", "5", "10", "21")) +
+  theme_classic(base_size = 12) +
+  labs(x = "Age", y = "Cumulative Percentage of Total Maturation (%)", color = "Feature")
+
+ggsave(file.path(output_dir, "cumulative_age_effects.png"), plot = effect_plot, width = 6, height = 4, dpi = 300)
+
