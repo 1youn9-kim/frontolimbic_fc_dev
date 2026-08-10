@@ -31,6 +31,7 @@ model_data <- master_table %>%
     sex = as.factor(sex),
     site = as.factor(site)
   )
+model_data$deltar_h = -model_data$deltar_h
 
 mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
 sigma_formula <- ~fp(age,npoly=1)
@@ -272,7 +273,6 @@ plot(model_full)
 
 
 # Hipp
-model_data$deltar_h = -model_data$deltar_h
 
 
 mu_formula <- ~ fp(age,npoly=1) + sex + random(site)
